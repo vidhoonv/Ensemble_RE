@@ -254,53 +254,61 @@ import java.util.*;
 public class SFScore {
 
     // true to print out judgement for each line of response
-    static boolean trace = false;
+     boolean trace = false;
 
     // true to ignore docId ... match only on answerString
-    static boolean anydoc = false;
+     boolean anydoc = false;
 
     // true to ignore justification offsets ... match only on answerString and docId
-    static boolean ignoreoffsets = false;
-
+     boolean ignoreoffsets = false;
     // true to ignore case in answerString
-    static boolean nocase = false;
+     boolean nocase = false;
 
     // tables built from judgement file
     // provenance is docid:predoffsets:entityoffsets:filleroffsets
 
     //  mapping from entity_id:slot_name:provenance:response_string --> judgement for filler (response_string and provenance)
-    static Map<String, String> judgement = new HashMap<String, String> ();
+     Map<String, String> judgement = new HashMap<String, String> ();
 
     //  mapping from entity_id:slot_name:provenance:response_string --> judgement for predicate justification offsets
-    static Map<String, String> predoffjudgement = new HashMap<String, String> ();
+     Map<String, String> predoffjudgement = new HashMap<String, String> ();
 
     //  mapping from entity_id:slot_name:provenance:response_string --> judgement for filler mention offsets
-    static Map<String, String> filleroffjudgement = new HashMap<String, String> ();
+     Map<String, String> filleroffjudgement = new HashMap<String, String> ();
 
     //  mapping from entity_id:slot_name:provenance:response_string --> judgement for entity mention offsets
-    static Map<String, String> entityoffjudgement = new HashMap<String, String> ();
+     Map<String, String> entityoffjudgement = new HashMap<String, String> ();
 
     //  mapping from entity_id:slot_name:provenance:response_string --> equivalence class of Correct or Redundant answers
-    static Map<String, Integer> equivalenceClass = new HashMap<String, Integer> ();
+     Map<String, Integer> equivalenceClass = new HashMap<String, Integer> ();
 
     // //  mapping from entity_id:slot_name --> {true, false}
     // //  look at size of query_eclasses.get(query) to determine if query has answer
     // static Map<String, Boolean> query_has_answer = new HashMap<String, Boolean> ();
 
     //  mapping from entity_id:slot_name --> set of equivalence classes for Correct answers not in the reference KB
-    static Map<String, Set<Integer>> query_eclasses = new HashMap<String, Set<Integer>> ();
+     Map<String, Set<Integer>> query_eclasses = new HashMap<String, Set<Integer>> ();
 
     //  mapping from entity_id:slot_name --> set of equivalence classes for Correct answers already in the reference KB
-    static Map<String, Set<Integer>> query_kb_eclasses = new HashMap<String, Set<Integer>> ();
+     Map<String, Set<Integer>> query_kb_eclasses = new HashMap<String, Set<Integer>> ();
 
     // table built from responses file
 
     //  mapping from entity_id:slot_name --> list[provenance:response_string]
-    static Map<String, List<String>> response = new HashMap <String, List<String>> ();
+     Map<String, List<String>> response = new HashMap <String, List<String>> ();
 
     // keeps track of equivalent eclasses (necessary due to lenient matching)
-    static Map<String, Set<Integer>> equivEclassesByKey = new HashMap<String, Set<Integer>> ();
-
+     Map<String, Set<Integer>> equivEclassesByKey = new HashMap<String, Set<Integer>> ();
+    
+    
+    //book keeping for prior estimation for extractors
+     Map<String, Double> mpSlotConfidence_precision = new HashMap<String, Double> (); //this is same as probability
+     Map<String, Double> mpSlotConfidence_recall = new HashMap<String, Double> ();
+     Map<String, Double> mpSlotConfidence_f1 = new HashMap<String, Double> ();
+     Map<String, Integer> mpSlotJudgementEntriesCount = new HashMap<String, Integer> ();
+     Map<String, Integer> mpSlotResponseEntriesCount = new HashMap<String, Integer> ();
+     Map<String, Integer> mpSlotCorrectResponseEntriesCount = new HashMap<String, Integer> ();
+    
     // codes in judgement file
     // static final String CORRECT = "C";
     // static final String REDUNDANT = "R";
@@ -311,28 +319,28 @@ public class SFScore {
     // static final String INEXACT_LONG = "L";
     // static final String INEXACT_SHORT = "S";
 
-    static String CORRECT = "C";
-    static String REDUNDANT = "R";
-    static String INEXACT = "X";
-    static String WRONG = "W";
-    static String IGNORE = "I";
-    static String NORESPONSE = "0";
-    static String INEXACT_LONG = "L";
-    static String INEXACT_SHORT = "S";
+     String CORRECT = "C";
+     String REDUNDANT = "R";
+     String INEXACT = "X";
+     String WRONG = "W";
+     String IGNORE = "I";
+     String NORESPONSE = "0";
+     String INEXACT_LONG = "L";
+     String INEXACT_SHORT = "S";
 
     // next unique equivalence class
-    static int eclass_generator = 1000000;
+     int eclass_generator = 1000000;
 
-    static String slotFile = null;
+     String slotFile = null;
 
-    static Set<String> slots = new TreeSet<String>();
+     Set<String> slots = new TreeSet<String>();
 
     /**
      *  SFScorer <responses file> <key file>
      *  scores responses file against key file
      */
 
-    public static void main (String[] args) throws IOException {
+    public  void run (String[] args) throws IOException {
 
 	if (args.length < 2 || args.length > 7) {
 	    System.out.println ("SlotScorer must be invoked with 2 to 8 arguments:");
@@ -465,6 +473,17 @@ public class SFScore {
 		equivEclassesByKey.get(key).add(equivalenceClass.get(key)); 
 
 	    } else { // new key, this is easy: we shouldn't have any conflicts
+	    	
+	    	//this is tracking the number of entries in judgement per slot type
+	    	
+	    String slot_type=fields[1].split(":",2)[1];
+	    if(mpSlotJudgementEntriesCount.containsKey(slot_type)){
+	    	mpSlotJudgementEntriesCount.put(slot_type,mpSlotJudgementEntriesCount.get(slot_type)+1);
+	    }
+	    else{
+	    	mpSlotJudgementEntriesCount.put(slot_type, 1);
+	    }
+	    
 		judgement.put(key, jment);
 		equivalenceClass.put(key, eclass);
 		predoffjudgement.put(key, predoffjment);
@@ -594,6 +613,7 @@ public class SFScore {
 		}
 	    }
 	    num_answers += num_answers_to_query;
+	    
 
 	    int num_kb_answers_to_query = 0;
 	    if (query_kb_eclasses.get(query) != null) {
@@ -607,6 +627,16 @@ public class SFScore {
 		}
 	    }
 	    num_kb_answers += num_kb_answers_to_query;
+	    
+	    
+	    String slot_type=query.split(":",2)[1];
+	    if(mpSlotResponseEntriesCount.containsKey(slot_type)){
+	    	mpSlotResponseEntriesCount.put(slot_type,mpSlotResponseEntriesCount.get(slot_type)+num_answers_to_query+num_kb_answers_to_query);
+	    }
+	    else{
+	    	mpSlotResponseEntriesCount.put(slot_type, num_answers_to_query+num_kb_answers_to_query);
+	    }
+	    
 
 	    List<String> responseList = response.get(query);
 	    if (responseList == null) {
@@ -662,6 +692,12 @@ public class SFScore {
 			Integer E = equivalenceClass.get(key);
 			if (distincts.contains(E)) {
 			    num_redundant++;
+			    if(mpSlotCorrectResponseEntriesCount.containsKey(slot_type)){
+			    	mpSlotCorrectResponseEntriesCount.put(slot_type, mpSlotCorrectResponseEntriesCount.get(slot_type)+1);
+			    }
+			    else{
+			    	mpSlotCorrectResponseEntriesCount.put(slot_type, 1);
+			    }
 			    symbol = "r";   // redundant with other returned response
 			} else {
 			    num_kb_redundant++;
@@ -675,6 +711,12 @@ public class SFScore {
 			} else {
 			    num_correct++;
 			    distincts.add(E);
+			    if(mpSlotCorrectResponseEntriesCount.containsKey(slot_type)){
+			    	mpSlotCorrectResponseEntriesCount.put(slot_type, mpSlotCorrectResponseEntriesCount.get(slot_type)+1);
+			    }
+			    else{
+			    	mpSlotCorrectResponseEntriesCount.put(slot_type, 1);
+			    }
 			}
 		    } else {
 			System.out.println ("ERROR: Invalid judgement " + J);
@@ -721,6 +763,41 @@ public class SFScore {
 	System.out.println ("\tRecall: (" + num_correct + "+" + num_kb_redundant + ") / (" + num_answers + "+" + num_kb_answers + ") = " + recall);
 	System.out.println ("\tPrecision: (" + num_correct + "+" + num_kb_redundant + ") / " + num_responses + " = " + precision);
 	System.out.println ("\tF1: " + F);
+	
+	
+	for(String key : mpSlotCorrectResponseEntriesCount.keySet()){
+		double ncorrect =  mpSlotCorrectResponseEntriesCount.get(key);
+		double nresponses = mpSlotResponseEntriesCount.get(key);
+		double njudgement = mpSlotJudgementEntriesCount.get(key);
+		//System.out.println("key: "+key+ " correct responses: "+ncorrect);
+		//System.out.println("key: "+key+ " total responses: "+nresponses);
+		//System.out.println("key: "+key+ " judgement responses: "+njudgement);
+		
+		Double prec = new Double(0.0);
+		Double rec =  new Double(0.0);
+		Double f1 = new Double(0.0);
+		
+		prec=ncorrect/nresponses;
+		rec=ncorrect/njudgement;
+		f1=2*prec*rec/(prec+rec);
+		
+		mpSlotConfidence_precision.put(key,prec);
+		mpSlotConfidence_recall.put(key, rec);
+		mpSlotConfidence_f1.put(key,f1);	
+		
+	}
+	
+	for(String k : mpSlotConfidence_precision.keySet() ){
+			System.out.println(k+"\t : \t"+mpSlotConfidence_precision.get(k));
+	}
+	for(String k : mpSlotConfidence_recall.keySet() ){
+		System.out.println(k+"\t : \t"+mpSlotConfidence_recall.get(k));
+	}
+	for(String k : mpSlotConfidence_f1.keySet() ){
+		System.out.println(k+"\t : \t"+mpSlotConfidence_f1.get(k));
+	}
+	
+		
     }
 
     /**
