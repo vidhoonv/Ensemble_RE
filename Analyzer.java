@@ -41,6 +41,9 @@ public class Analyzer {
 	SFScore scorer_sys1;
 	SFScore scorer_sys2;
 	
+	//book keeping
+	Map<String,Integer> uniqueSlotWiseCount;
+	
 	Analyzer(String f1, String f2) throws IOException{
 		
 		common_count=0;
@@ -70,6 +73,8 @@ public class Analyzer {
 		
 		scorer_sys1 = new SFScore();
 		scorer_sys2 = new SFScore();
+		
+		uniqueSlotWiseCount = new HashMap<String,Integer>();
 		populateSingleValuedSlots();
 		getExtractions();
 		
@@ -241,11 +246,11 @@ public class Analyzer {
 				}
 				else{
 					if(st1.contains("NIL")){
-						unique1.put(kk,"NIL");
+						//unique1.put(kk,"NIL");
 						unique_count1-=1;
 					}
 					if(st2.contains("NIL")){
-						unique2.put(kk,"NIL");
+						//unique2.put(kk,"NIL");
 						unique_count2-=1;
 					}
 				}
@@ -262,7 +267,12 @@ public class Analyzer {
 				unique1_set.removeAll(st2);
 				it=unique1_set.iterator();
 				while(it.hasNext()){
-					String kkk = key+"~"+k+"~"+it.next();
+					String nxt=new String(it.next().toString());
+					if(nxt.equals("NIL")){
+						System.out.println("here1");
+						continue;
+					}
+					String kkk = key+"~"+k+"~"+nxt;
 					unique1.put(kkk, output1.get(kkk));
 				}
 				
@@ -270,7 +280,12 @@ public class Analyzer {
 				unique2_set.removeAll(st1);
 				it=unique2_set.iterator();
 				while(it.hasNext()){
-					String kkk = key+"~"+k+"~"+it.next();
+					String nxt=new String(it.next().toString());
+					if(nxt.equals("NIL")){
+						System.out.println("here2");
+						continue;
+					}
+					String kkk = key+"~"+k+"~"+nxt;
 					unique2.put(kkk, output2.get(kkk));
 				}
 				
@@ -369,14 +384,14 @@ public class Analyzer {
 		
 		
 		if(pp1.length > 1){
-			conf1=Double.parseDouble(pp1[3]);
+			conf1=Double.parseDouble(pp1[5]);
 		}
 		
 		
 		double resConf=noisyAnd(slot_type,conf1,conf2);
 		int i=0;
 		for(String elem : pp1){
-			if(i==3){
+			if(i==5){
 				result=result.concat(resConf+"");
 				break;
 			}
@@ -398,21 +413,21 @@ public class Analyzer {
 		
 		
 		if(pp1.length > 1){
-			conf1=Double.parseDouble(pp1[3]);
+			conf1=Double.parseDouble(pp1[5]);
 		}
 		
 		String[] pp2 = output2.split("\t");
 		
 		
 		if(pp2.length > 1){
-			conf2=Double.parseDouble(pp2[3]);
+			conf2=Double.parseDouble(pp2[5]);
 		}
 		
 		
 		double resConf=noisyOr(slot_type,conf1,conf2);
 		int i=0;
 		for(String elem : pp1){
-			if(i==3){
+			if(i==5){
 				result=result.concat(resConf+"");
 				break;
 			}
@@ -469,7 +484,7 @@ public class Analyzer {
 		Double conf1=0.0,conf2=0.0;
 		String[] pp1 = unique1.get(key).split("\t");
 		if(pp1.length > 1){
-			conf1=Double.parseDouble(pp1[3]);
+			conf1=Double.parseDouble(pp1[5]);
 		}
 		if(extractions2.containsKey(query_id)){
 			Map<String,Set<String>> mp = extractions2.get(query_id);
@@ -484,8 +499,8 @@ public class Analyzer {
 					if(unique2.containsKey(new_key)){
 						String[] pp2 = unique2.get(new_key).split("\t");
 						if(pp2.length > 1){
-							if(conf2<Double.parseDouble(pp2[3])){
-								conf2=Double.parseDouble(pp2[3]);
+							if(conf2<Double.parseDouble(pp2[5])){
+								conf2=Double.parseDouble(pp2[5]);
 								fkey=new_key;
 							}
 						}	
@@ -515,6 +530,8 @@ public class Analyzer {
 			String query_id = parts[0];
 			String slot_name = parts[1];
 			String line = query_id+"\t"+slot_name+"\t"+"e"+typeStr+"\t";
+			
+			
 			
 			if(singleValuedSlots.contains(slot_name)){
 				//if it is a single valued slot then get highest confidence entry among two extractors
@@ -598,6 +615,15 @@ public class Analyzer {
 				String slot_name = parts[1];
 				String line = query_id+"\t"+slot_name+"\t"+"e"+typeStr+"\t";
 				
+				
+				//book keeping unique slot wise counts
+				if(uniqueSlotWiseCount.containsKey(slot_name)){
+					uniqueSlotWiseCount.put(slot_name, uniqueSlotWiseCount.get(slot_name)+1);
+				}
+				else{
+					uniqueSlotWiseCount.put(slot_name, 1);
+				}
+				
 				if(singleValuedSlots.contains(slot_name)){
 					//if it is a single valued slot then get highest confidence entry among two extractors
 					String slot_fill_entry = gethighestConfidenceFill(key,query_id,slot_name);
@@ -620,6 +646,14 @@ public class Analyzer {
 				String query_id = parts[0];
 				String slot_name = parts[1];
 				String line = query_id+"\t"+slot_name+"\t"+"e"+typeStr+"\t";
+				
+				//book keeping unique slot wise counts
+				if(uniqueSlotWiseCount.containsKey(slot_name)){
+					uniqueSlotWiseCount.put(slot_name, uniqueSlotWiseCount.get(slot_name)+1);
+				}
+				else{
+					uniqueSlotWiseCount.put(slot_name, 1);
+				}
 				
 				if(singleValuedSlots.contains(slot_name)){
 					//check if this was selected as the best confidence slot before
@@ -664,6 +698,13 @@ public class Analyzer {
 			
 			bw.close();
 			
+			int ttl=0;
+			
+			for(String key : uniqueSlotWiseCount.keySet()){
+				ttl+=uniqueSlotWiseCount.get(key);
+				System.out.println("unique entries for "+key+" \t "+uniqueSlotWiseCount.get(key));
+			}
+			System.out.println("total unique count "+ttl);
 	}
 	
 	public static void main(String[] args) throws IOException {
@@ -678,7 +719,7 @@ public class Analyzer {
 		
 		
 		
-		
+		/*
 		String[] nargs= new String[2];
 		nargs[0]="/home/vidhoonv/workspace/RE_output_analysis/2013_output/lsv_output_2013";
 		nargs[1]=key_file;
@@ -690,7 +731,7 @@ public class Analyzer {
 		
 		myanalyzer.writeNoisyUnionOutput("union1","ensemble_union1.txt");
 		myanalyzer.writeNoisyCommonOutput("common1","ensemble_common1.txt");
-		
+		*/
 		myanalyzer.writeUnionOutput("union2","ensemble_union2.txt");
 		myanalyzer.writeCommonOutput("common2","ensemble_common2.txt");
 		//myanalyzer.writeUnionOutput("union1","ensemble_union.txt");
