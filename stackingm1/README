@@ -1,0 +1,21 @@
+STACKING METHOD 1
+=================
+
+In method 1, we attempt to build seperate classifier for different relation types.
+This is challenging because the training data from 2013 queries will not be sufficient
+to build models for different relation types individually.
+
+Preprocessing before classification
+===================================
+
+DataExtractor
+=============
+This is the main preprocessing class that uses scorers for different years to collect the required
+extractions from output files of different extractors and combine confidence values from them.
+
+
+Postprocessing after classification
+===================================
+For each extraction presented to the classifier it indicates if it must be included in the final output.
+This postprocessing class evaluates the output of the classifier and includes the classified extractions
+and creates output file in the required format.
