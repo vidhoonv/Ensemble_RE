@@ -1,0 +1,21 @@
+STACKING METHOD 2
+=================
+
+In method 2, we attempt to build a combined classifier for different relation types.
+In this case, the classifier takes relation type and confidence values from different
+extractors as input and classifies if the extraction must be included or not.
+
+Preprocessing before classification
+===================================
+
+DataExtractor
+=============
+This is the main preprocessing class that uses scorers for different years to collect the required
+extractions from output files of different extractors and combine confidence values from them.
+
+
+Postprocessing after classification
+===================================
+For each extraction presented to the classifier it indicates if it must be included in the final output.
+This postprocessing class evaluates the output of the classifier and includes the classified extractions
+and creates output file in the required format.
