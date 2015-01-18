@@ -10,10 +10,13 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /*
+ * DataExtractor class:
+ * 
  * Extract training data for classifiers from 
  * output file of extractors and key file.
- * 
- * 
+ * Can be configured to extract slot fills by
+ * relation type or even group common and unique 
+ * extractions. 
  * 
  */
 public class DataExtractor {
@@ -32,6 +35,9 @@ public class DataExtractor {
 	Map<String,Integer> relationIDs = new HashMap<String,Integer>();
 	Map<String,Integer> relationGroupIDs = new HashMap<String,Integer>();
 	Set<String> singleValuedSlots= new HashSet<String>();
+	
+	//map to track slot type -> fillscount 
+	Map<String,Integer> fillsCount = new HashMap<String,Integer>();
 	public DataExtractor(){
 	
 		//insert relation IDs - an integer value for each relation type to use as feature for classification
@@ -152,6 +158,51 @@ public class DataExtractor {
 		singleValuedSlots.add("org:country_of_headquarters");
 		singleValuedSlots.add("org:date_dissolved");
 		singleValuedSlots.add("org:date_founded");
+		
+		
+		
+		//fillscount initialize
+		fillsCount.put("per:alternate_names",0);
+		fillsCount.put("per:date_of_birth",0);
+		fillsCount.put("per:age",0);
+		fillsCount.put("per:country_of_birth",0);
+		fillsCount.put("per:stateorprovince_of_birth",0);
+		fillsCount.put("per:city_of_birth",0);
+		fillsCount.put("per:origin",0);
+		fillsCount.put("per:date_of_death",0);
+		fillsCount.put("per:country_of_death",0);
+		fillsCount.put("per:stateorprovince_of_death",0);
+		fillsCount.put("per:city_of_death",0);
+		fillsCount.put("per:cause_of_death",0);
+		fillsCount.put("per:countries_of_residence",0);
+		fillsCount.put("per:statesorprovinces_of_residence",0);
+		fillsCount.put("per:cities_of_residence",0);
+		fillsCount.put("per:schools_attended",0);
+		fillsCount.put("per:title",0);
+		fillsCount.put("per:employee_or_member_of",0);
+		fillsCount.put("per:religion",0);
+		fillsCount.put("per:spouse",0);
+		fillsCount.put("per:children",0);
+		fillsCount.put("per:parents",0);
+		fillsCount.put("per:siblings",0);
+		fillsCount.put("per:other_family",0);
+		fillsCount.put("per:charges",0);
+		fillsCount.put("org:alternate_names",0);
+		fillsCount.put("org:political_religious_affiliation",0);
+		fillsCount.put("org:top_members_employees",0);
+		fillsCount.put("org:number_of_employees_members",0);
+		fillsCount.put("org:members",0);
+		fillsCount.put("org:member_of",0);
+		fillsCount.put("org:subsidiaries",0);
+		fillsCount.put("org:parents",0);
+		fillsCount.put("org:founded_by",0);
+		fillsCount.put("org:date_founded",0);
+		fillsCount.put("org:date_dissolved",0);
+		fillsCount.put("org:country_of_headquarters",0);
+		fillsCount.put("org:stateorprovince_of_headquarters",0);
+		fillsCount.put("org:city_of_headquarters",0);
+		fillsCount.put("org:shareholders",0);
+		fillsCount.put("org:website",0);
 	}
 	
 	public void writeSlotsTogether(String year,String key_file,String cu_opt) throws IOException{
@@ -230,6 +281,10 @@ public class DataExtractor {
 			output1=mpOut1.get(key);
 			String[] parts=output1.split(delimiter);
 			
+			//book keeping
+			int count = fillsCount.get(parts[1]);
+			fillsCount.remove(parts[1]);
+			fillsCount.put(parts[1],count+1);
 			
 			if(mp2.containsKey(key)){
 				counter+=1;
@@ -289,6 +344,10 @@ public class DataExtractor {
 				output2=mpOut2.get(key);
 				String[] parts=output2.split(delimiter);
 				
+				//book keeping
+				int count = fillsCount.get(parts[1]);
+				fillsCount.remove(parts[1]);
+				fillsCount.put(parts[1],count+1);
 				
 				/*
 				 * extract and add features
@@ -402,6 +461,14 @@ public class DataExtractor {
 			
 			output1=mpOut1.get(key);
 			String[] parts=output1.split(delimiter);
+			
+			//book keeping
+			int count = fillsCount.get(parts[1]);
+			fillsCount.remove(parts[1]);
+			fillsCount.put(parts[1],count+1);
+			
+			
+			
 			Integer relID = relationIDs.get(parts[1]);
 			if(mp2.containsKey(key)){
 				counter+=1;
@@ -461,6 +528,14 @@ public class DataExtractor {
 				String[] parts=output2.split(delimiter);
 				Integer relID = relationIDs.get(parts[1]);
 				
+				
+				//book keeping
+				int count = fillsCount.get(parts[1]);
+				fillsCount.remove(parts[1]);
+				fillsCount.put(parts[1],count+1);
+				
+				
+				
 				/*
 				 * extract and add features
 				 */
@@ -490,6 +565,17 @@ public class DataExtractor {
 			bw_unique[slotid].close();
 		}
 		System.out.println("common count : "+counter);
+	}
+	
+	public void printStats(){
+		//print fills count
+		
+		System.out.println("RUN SUMMARY");
+		
+		System.out.println("Slot type \t Number of fills");
+		for(String key : fillsCount.keySet()){
+			System.out.println(key+"\t"+fillsCount.get(key));
+		}
 	}
 	
 	/*
@@ -559,6 +645,7 @@ public class DataExtractor {
 			de.writeSlotsTogether(year,key_file,cu_opt);
 		}
 
+		de.printStats();
 	}
 
 }
