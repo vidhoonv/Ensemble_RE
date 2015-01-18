@@ -1,21 +1,32 @@
-STACKING METHOD 2
-=================
+STACKING METHOD
+===============
 
-In method 2, we attempt to build a combined classifier for different relation types.
-In this case, the classifier takes relation type and confidence values from different
-extractors as input and classifies if the extraction must be included or not.
+This module comprises of all code pieces to generate input files for building a stacked classifier that classifies slot fills based on confidence values from different relation extractors.
 
-Preprocessing before classification
-===================================
+Flow
+====
+
+DataExtractor (generate input data) -> WEKA(selecting attributes) -> WEKA (training classifier) -> WEKA (generate predictions on test data) -> Postprocessor (generate KBP format output file)
 
 DataExtractor
 =============
-This is the main preprocessing class that uses scorers for different years to collect the required
-extractions from output files of different extractors and combine confidence values from them.
+Extract training data for classifiers from output file of extractors and key file. Can be configured to extract slot fills by relation type or even group common and unique extractions.
+ 
+FeatureExtractor
+================
+
+Invoked for each slotfill by DataExtractor to generate features for training the classifier. Currently some linear features and certain other basic features are extracted here.
 
 
-Postprocessing after classification
-===================================
-For each extraction presented to the classifier it indicates if it must be included in the final output.
-This postprocessing class evaluates the output of the classifier and includes the classified extractions
-and creates output file in the required format.
+Classification using WEKA
+=========================
+
+The output from DataExtractor can be used in weka and converted to appropriate (.arff) format - then can be used for training a classifier model. The predictions on test data are stored and fed to postProcessor.
+
+PostProcessor
+=============
+Used to create output file in KBP format for evaluation. Feed the output predictions from classifier and postProcessor throws an output file in KBP format that can be run against their provided scorer. 
+
+NOTE: 
+Currently postProcessor produces output file in 2014 format.
+
