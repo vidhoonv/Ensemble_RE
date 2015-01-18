@@ -17,6 +17,10 @@ FeatureExtractor
 
 Invoked for each slotfill by DataExtractor to generate features for training the classifier. Currently some linear features and certain other basic features are extracted here.
 
+Scorers
+=======
+
+The scorers are modified versions of official KBP scorers. They include code to track the judgement of each slot fill from relation extractor based on key file. These tracked judgements are used by DataExtractor to create training data and test data for classifier.
 
 Classification using WEKA
 =========================
