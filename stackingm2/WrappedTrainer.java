@@ -25,7 +25,7 @@ public class WrappedTrainer {
 		
 		//add per slots
 		perSlots.add("per:alternate_names");
-		//perSlots.add("per:date_of_birth");
+		perSlots.add("per:date_of_birth");
 		perSlots.add("per:age");
 		perSlots.add("per:country_of_birth");
 		perSlots.add("per:stateorprovince_of_birth");
@@ -44,14 +44,14 @@ public class WrappedTrainer {
 		
 		perSlots.add("per:schools_attended");
 		perSlots.add("per:title");
-		//perSlots.add("per:employee_or_member_of");
+		perSlots.add("per:employee_or_member_of");
 		perSlots.add("per:religion");
 		perSlots.add("per:spouse");
 		
 		perSlots.add("per:children");
 		perSlots.add("per:parents");
 		perSlots.add("per:siblings");
-		//perSlots.add("per:other_family");
+		perSlots.add("per:other_family");
 		perSlots.add("per:charges");
 		
 		
@@ -60,11 +60,11 @@ public class WrappedTrainer {
 		orgSlots.add("org:political_religious_affiliation");
 		orgSlots.add("org:top_members_employees");
 		orgSlots.add("org:number_of_employees_members");
-		//orgSlots.add("org:members");
+		orgSlots.add("org:members");
 		
 		orgSlots.add("org:member_of");
 		orgSlots.add("org:subsidiaries");
-		//orgSlots.add("org:parents");
+		orgSlots.add("org:parents");
 		orgSlots.add("org:founded_by");
 		orgSlots.add("org:date_founded");
 		
@@ -92,8 +92,8 @@ public class WrappedTrainer {
 //			System.out.println(testDataFile);
 			StackedClassifier sc = new StackedClassifier(inTrainDataFile,trainDataFile,inTestDataFile,testDataFile,testPredictionsFile);
 			sc.preprocessData();
-			if(sc.isTrainingDataEmpty || sc.isTestingDataEmpty){
-				System.out.println("No data for "+slotType);
+			if(sc.isTrainingDataEmpty || sc.isTestingDataEmpty || sc.isTrainingTargetSingleClass){
+				System.out.println("No data or same target for "+slotType);
 			}
 			else{
 				sc.buildClassifier();
@@ -116,8 +116,8 @@ public class WrappedTrainer {
 //			System.out.println(testDataFile);
 			StackedClassifier sc = new StackedClassifier(inTrainDataFile,trainDataFile,inTestDataFile,testDataFile,testPredictionsFile);
 			sc.preprocessData();
-			if(sc.isTrainingDataEmpty || sc.isTestingDataEmpty){
-				System.out.println("No data for "+slotType);
+			if(sc.isTrainingDataEmpty || sc.isTestingDataEmpty || sc.isTrainingTargetSingleClass){
+				System.out.println("No data or same target for "+slotType);
 			}
 			else{
 				sc.buildClassifier();
@@ -142,7 +142,7 @@ public class WrappedTrainer {
 		String testPrefix = new String("2014-");
 		
 		String trainDir = new String("/home/vidhoonv/workspace/RE_ensemble/run_out_2013/unique/");
-		String testDir = new String("/home/vidhoonv/workspace/RE_ensemble/run_out_2014/unique/");
+		String testDir = new String("/home/vidhoonv/workspace/RE_ensemble/run_out_2014/unique");
 		
 		WrappedTrainer wt = new WrappedTrainer(trainDir,testDir,trainPrefix,testPrefix,fileSuffix);
 		wt.buildClassifierForAllSlots();

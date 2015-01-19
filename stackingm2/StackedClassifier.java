@@ -3,6 +3,8 @@ package stackingm2;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.Random;
 
 import weka.attributeSelection.AttributeSelection;
@@ -44,6 +46,7 @@ public class StackedClassifier {
 	Instances predictionInstances=null;
 	AttributeSelectedClassifier classifier=null;
 	boolean isTestingDataEmpty,isTrainingDataEmpty;
+	boolean isTrainingTargetSingleClass;
 	
 	public StackedClassifier(){
 		inTrainDataFile = new String("/home/vidhoonv/workspace/RE_ensemble/weka_java_testing/2013.txt");
@@ -53,6 +56,7 @@ public class StackedClassifier {
 		testPredictionsFile = new String("/home/vidhoonv/workspace/RE_ensemble/weka_java_testing/2014-pred.csv");
 		isTestingDataEmpty=false;
 		isTrainingDataEmpty=false;
+		isTrainingTargetSingleClass=false;
 	}
 	
 	public StackedClassifier(String intrainfile, String trainfile, String intestfile, String testfile, String testoutfile){
@@ -63,9 +67,11 @@ public class StackedClassifier {
 		testPredictionsFile = testoutfile;
 		isTestingDataEmpty=false;
 		isTrainingDataEmpty=false;
+		isTrainingTargetSingleClass=false;
 	}
 	
 	public boolean loadCSVinput(String infile, String outfile, String year) throws Exception{
+		System.out.println(infile);
 		String[] loaderOptions = new String[2];
 		loaderOptions[0]="-F";
 		loaderOptions[1]="\t";
@@ -167,6 +173,7 @@ public class StackedClassifier {
 		DataSource testSource = new DataSource(testDataFile);
 		Instances test = testSource.getDataSet();
 		
+		
 		NumericToNominal nnfilter = new NumericToNominal();
 		nnfilter.setAttributeIndices("45-last");
 		nnfilter.setInputFormat(train);
@@ -176,6 +183,19 @@ public class StackedClassifier {
 		
 		trainInstances.setClassIndex(trainInstances.numAttributes()-1);
 		testInstances.setClassIndex(testInstances.numAttributes()-1);
+		//check if target has only one value - this can happen sometimes.
+		Enumeration<Object> en=trainInstances.attribute(trainInstances.numAttributes()-1).enumerateValues();
+		int i=0;
+		while(en.hasMoreElements()){
+			en.nextElement();
+			i++;
+		}
+		if(i==1){			
+			isTrainingTargetSingleClass=true;
+			return;
+		}
+		
+		
 
 		
 	}
@@ -208,7 +228,7 @@ public class StackedClassifier {
 		 //add predicted target to predictions
 		 //FastVector predictions = new FastVector();
 		 
-		 ArrayList<Prediction> predictions = evals.predictions();
+		 List<Prediction> predictions = evals.predictions();
 		 int i=0;
 		 for(Prediction p : predictions){
 			 NominalPrediction np = (NominalPrediction) p;
@@ -235,10 +255,12 @@ public class StackedClassifier {
 		// TODO Auto-generated method stub
 		StackedClassifier sc = new StackedClassifier();
 		sc.preprocessData();
-		if(sc.isTestingDataEmpty || sc.isTrainingDataEmpty){
+		if(sc.isTestingDataEmpty || sc.isTrainingDataEmpty || sc.isTrainingTargetSingleClass){
+		
 			return;
 		}
 		else{
+			
 			sc.buildClassifier();
 		}
 		
