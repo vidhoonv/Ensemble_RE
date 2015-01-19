@@ -413,11 +413,11 @@ public class DataExtractor {
 		BufferedWriter[] bw_unique= new BufferedWriter[num_slots];
 		Set<String> featureSet = null;
 		for(String slot_name  : relationIDs.keySet()){
-			String outfilename1 = new String("run_out/"+year+"-"+slot_name+"-data.txt");
+			String outfilename1 = new String("run_out/"+year+"-"+slot_name+".txt");
 			Integer slotid= relationIDs.get(slot_name);
 			bw[slotid] = new BufferedWriter(new FileWriter(outfilename1));
 			
-			String outfilename2 = new String("run_out/unique/"+year+"-"+slot_name+"-unique-data.txt");
+			String outfilename2 = new String("run_out/unique/"+year+"-"+slot_name+".txt");
 			bw_unique[slotid] = new BufferedWriter(new FileWriter(outfilename2));
 			
 			//write header

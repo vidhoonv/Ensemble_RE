@@ -3,6 +3,15 @@ package stackingm2;
 import java.util.HashMap;
 import java.util.Map;
 
+/*
+ * FeatureExtractor class
+ * 
+ * Invoked for each slotfill by DataExtractor
+ * to generate features for training the classifier.
+ * Currently some linear features and certain other 
+ * basic features are extracted here.
+ * 
+ */
 public class FeatureExtractor {
 	Map<String,Double> features =null;
 
@@ -14,6 +23,14 @@ public class FeatureExtractor {
 		
 	}
 	
+	/*
+	 * args:
+	 * 
+	 * 1) de - data extractor instance
+	 * 2) key - key of the slot fill
+	 * 3) relationName - name of the relation of the slot fill being processed
+	 * 4)5) conf1, conf2 - confidence values from two extractors
+	 */
 	public void populateFeatures(DataExtractor de,String key,String relationName,Double conf1, Double conf2){
 		//features.put("",);
 		
