@@ -143,9 +143,7 @@ public class postProcessor {
 		singleValuedSlots.add("org:date_founded");
 	}
 	
-	public void getExtractions(String file){
-		
-	}
+
 	public void writeOutputFile(String file) throws IOException{
 		BufferedWriter out = null;
 		out = new BufferedWriter(new FileWriter(file));
@@ -170,7 +168,7 @@ public class postProcessor {
 		out.close();
 		
 	}
-	public void processClassifierOutput(String infile) throws IOException{
+	public void processClassifierOutput(String infile, String year) throws IOException{
 		int nLines=0, nSkipped=0;
 		BufferedReader csv = null;
 		csv = new BufferedReader(new FileReader(infile));
@@ -178,6 +176,24 @@ public class postProcessor {
 		csv.readLine(); //skip header
 		int expectedNumFields=10,predictedTargetFieldIndex=8,fillIndex=4;
 		int conf1Index=6, conf2Index=7;
+		
+		if(year.equals("2013")){
+			expectedNumFields=12;
+			predictedTargetFieldIndex=10;
+			fillIndex=4;
+			conf1Index=8;
+			conf2Index=9;
+		}
+		else if(year.equals("2014")){
+			expectedNumFields=10;
+			predictedTargetFieldIndex=8;
+			fillIndex=4;
+			conf1Index=6;
+			conf2Index=7;
+		}
+		else{
+			System.out.println("ERR: Invalid year");
+		}
 		while ((line = csv.readLine()) != null) {
 			nLines++;
 			String[] data = line.split("\t");
@@ -277,17 +293,18 @@ public class postProcessor {
 	/*
 	 * args[0]	-	input file comprising of the slot fills and classifier result 
 	 * args[1]	-	output file to write slot fills in KBP format based on classifier result				
-	 * 
+	 * args[2]  -	year
 	 * 
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		String fname=new String(args[0]);
 		String outFile=new String(args[1]);
+		String year = new String(args[2]);
 		postProcessor pp = new postProcessor();
 		pp.populateSingleValuedSlots();
 		pp.populateSlotFills();
-		pp.processClassifierOutput(fname);
+		pp.processClassifierOutput(fname,year);
 		pp.writeOutputFile(outFile);
 	}
 

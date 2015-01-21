@@ -71,7 +71,7 @@ public class StackedClassifier {
 	}
 	
 	public boolean loadCSVinput(String infile, String outfile, String year) throws Exception{
-		System.out.println(infile);
+		//System.out.println(infile);
 		String[] loaderOptions = new String[2];
 		loaderOptions[0]="-F";
 		loaderOptions[1]="\t";
@@ -220,10 +220,10 @@ public class StackedClassifier {
 		// Evaluation evaluation = new Evaluation(trainInstances);
 		// evaluation.crossValidateModel(classifier, trainInstances, 10, new Random(1));
 		 
-		 System.out.println("Number of attributes selected : "+classifier.measureNumAttributesSelected());
+		 //System.out.println("Number of attributes selected : "+classifier.measureNumAttributesSelected());
 		 Evaluation evals = new Evaluation(testInstances);
 		 evals.evaluateModel(classifier, testInstances);		 
-		 System.out.println(evals.toSummaryString("\nResults\n======\n", false));
+		// System.out.println(evals.toSummaryString("\nResults\n======\n", false));
 		 
 		 //add predicted target to predictions
 		 //FastVector predictions = new FastVector();

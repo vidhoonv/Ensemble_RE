@@ -86,7 +86,7 @@ public class WrappedTrainer {
 			String testDataFile = new String(testDir+testPrefix+slotType+".arff");
 			String testPredictionsFile = new String("/home/vidhoonv/workspace/RE_ensemble/predictions/"+testPrefix+slotType+".txt");
 			
-			System.out.println(inTrainDataFile);
+//			System.out.println(inTrainDataFile);
 //			System.out.println(inTestDataFile);
 //			System.out.println(trainDataFile);
 //			System.out.println(testDataFile);
@@ -110,7 +110,7 @@ public class WrappedTrainer {
 			String testDataFile = new String(testDir+testPrefix+slotType+".arff");
 			String testPredictionsFile = new String("/home/vidhoonv/workspace/RE_ensemble/predictions/"+testPrefix+slotType+".txt");
 			
-			System.out.println(inTrainDataFile);
+//			System.out.println(inTrainDataFile);
 //			System.out.println(inTestDataFile);
 //			System.out.println(trainDataFile);
 //			System.out.println(testDataFile);
@@ -142,7 +142,7 @@ public class WrappedTrainer {
 		String testPrefix = new String("2014-");
 		
 		String trainDir = new String("/home/vidhoonv/workspace/RE_ensemble/run_out_2013/unique/");
-		String testDir = new String("/home/vidhoonv/workspace/RE_ensemble/run_out_2014/unique");
+		String testDir = new String("/home/vidhoonv/workspace/RE_ensemble/run_out_2014/unique/");
 		
 		WrappedTrainer wt = new WrappedTrainer(trainDir,testDir,trainPrefix,testPrefix,fileSuffix);
 		wt.buildClassifierForAllSlots();
