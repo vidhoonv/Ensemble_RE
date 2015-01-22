@@ -11,6 +11,8 @@ different relation extraction systems. The output files
 from SF Validation task do not contain NIL slot fills.
 
 Args: <path_to_SF_output_files> <number_of_systems>
+
+
 SFOutputPreprocessor
 ~~~~~~~~~~~~~~~~~~~~
 This class preprocesses outputs of SF systems (taken from 
