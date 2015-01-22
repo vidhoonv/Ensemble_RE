@@ -1,0 +1,28 @@
+ENSEMBLING MULTIPLE RELATION EXTRACTION SYSTEMS
+===============================================
+
+UNION METHOD
+============
+
+UnionGenerator 
+~~~~~~~~~~~~~~
+This class generates a union output from output files of 
+different relation extraction systems. The output files 
+from SF Validation task do not contain NIL slot fills.
+
+Args: <path_to_SF_output_files> <number_of_systems>
+SFOutputPreprocessor
+~~~~~~~~~~~~~~~~~~~~
+This class preprocesses outputs of SF systems (taken from 
+SF Validation) task and produces new output files with NIL
+entries added. It runs the scorer on new output files to get
+the correct performance scores for these system runs. It 
+produces a summary file with P/R/F1 scores to help selecting
+good systems for ensembling.
+
+Args: <inputFilesDirectory> <outputFilesDirectory> <summray_file> <key_file>
+
+Sample args for:
+================
+1)UnionGenerator - "/home/vidhoonv/workspace/RE_ensemble/system_outputs/2014" 10
+2)SFOutputPreprocessor - "/home/vidhoonv/workspace/RE_ensemble/system_outputs/2014/" "/home/vidhoonv/workspace/RE_ensemble/system_outputs/2014_processed/"  "/home/vidhoonv/workspace/RE_ensemble/system_outputs/summary.txt" "/home/vidhoonv/workspace/RE_ensemble/keys/key_file_2014"

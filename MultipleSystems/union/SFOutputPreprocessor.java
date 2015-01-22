@@ -16,6 +16,14 @@ public class SFOutputPreprocessor {
 	/**
 	 * @param args
 	 */
+	/*This class preprocesses outputs of SF systems (taken from 
+	 * SF Validation) task and produces new output files with NIL
+	 * entries added. It runs the scorer on new output files to get
+	 * the correct performance scores for these system runs. It
+	 * produces a summary file with P/R/F1 scores to help selecting
+	 * good systems for ensembling.
+	 */
+
 	Map<String,Boolean> slotfills = null;
 	Set<String> perSlots = null;
 	Set<String> orgSlots = null;

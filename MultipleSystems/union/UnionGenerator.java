@@ -18,6 +18,13 @@ public class UnionGenerator {
 	 * @param args
 	 */
 	
+	/*
+	 * This class generates a union output from output files of
+	 * different relation extraction systems. The output files 
+	 * from SF Validation task do not contain NIL slot fills.
+	 * 
+	 */
+	
 	Integer numSystems=null;
 	String[] REOutput;
 	int commonCount;
