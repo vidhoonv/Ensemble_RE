@@ -33,14 +33,14 @@ public class SFOutputPreprocessor {
 	Set<String> nilExtractions;
 	String typeStr=null;
 	String outFile=null;
-	SFScore2014 scorer=null;
-
+	SFScore scorer2013=null;
+	SFScore2014 scorer2014=null;
 	int repeatedFills,nilCount, fillCount;
 	
 	Integer numSystems=null;
 	String[] REOutput;
 	
-	public SFOutputPreprocessor(int nsystems){
+	public SFOutputPreprocessor(int nsystems, String year){
 		numSystems = nsystems;
 		REOutput = new String[numSystems];
 		
@@ -52,7 +52,9 @@ public class SFOutputPreprocessor {
 		nilCount=0;
 		fillCount=0;
 		
-		scorer = new SFScore2014();		
+		scorer2013 = new SFScore();		
+		scorer2014 = new SFScore2014();
+		
 		slotfills = new HashMap<String,Boolean>();
 		perSlots = new HashSet<String>();
 		orgSlots = new HashSet<String>();
@@ -116,8 +118,16 @@ public class SFOutputPreprocessor {
 	}
 	
 	
-	public void addNILFills(){
-		String queryPrefix = new String("SF14_ENG_");
+	public void addNILFills(String year){
+		
+		String queryPrefix = null;
+		if(year.equals("2013")){
+			 queryPrefix = new String("SF13_ENG_");
+		}
+		else if(year.equals("2014")){
+			 queryPrefix = new String("SF14_ENG_");
+		}
+		
 
 		for(int i=1;i<=100;i++){
 			String queryID = queryPrefix+String.format("%03d", i);
@@ -210,7 +220,6 @@ public class SFOutputPreprocessor {
 			String[] parts = fillEntry.split("~");
 			String queryId = new String(parts[0]);
 			String slotName = new String(parts[1]);
-			String slotFill = new String(parts[2]);
 			String line = queryId+"\t"+slotName+"\t"+typeStr+"\t";
 
 
@@ -234,7 +243,8 @@ public class SFOutputPreprocessor {
 	 * args[1] = output path
 	 * args[2] = results summary file of all SF systems
 	 * args[3] = key file
-	 * 
+	 * args[5] = number of SF output files
+	 * args[6] = year
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
@@ -242,10 +252,12 @@ public class SFOutputPreprocessor {
 		String outputPath = new String(args[1]);
 		String summaryPath = new String(args[2]);
 		String keyPath = new String(args[3]);
+		Integer numSys = Integer.parseInt(args[4]);
+		String year = new String(args[5]);
 		
 		BufferedWriter bw = new BufferedWriter(new FileWriter(summaryPath));
 		
-		SFOutputPreprocessor sfp= new SFOutputPreprocessor(65);
+		SFOutputPreprocessor sfp= new SFOutputPreprocessor(numSys,year);
 		sfp.getFiles(inputFilesPath);
 		sfp.populateSlotFills();
 		
@@ -255,7 +267,7 @@ public class SFOutputPreprocessor {
 			sfp.extractFillsFromFile(inFile);
 			
 			//add NIL fillers for missing slot fills
-			sfp.addNILFills();
+			sfp.addNILFills(year);
 		
 			//write output with NIL
 			sfp.outFile = outputPath+sfp.typeStr+".txt";
@@ -266,9 +278,20 @@ public class SFOutputPreprocessor {
 			nargs[0] = sfp.outFile;
 			nargs[1] = keyPath;
 			nargs[2]= new String("anydoc");
-			sfp.scorer.run(nargs);
 			
-			bw.write(sfp.typeStr+"\t"+sfp.scorer.precision+"\t"+sfp.scorer.recall+"\t"+sfp.scorer.F+"\n");
+			if(year.equals("2013")){
+				sfp.scorer2013.run(nargs);
+				bw.write(sfp.typeStr+"\t"+sfp.scorer2013.precision+"\t"+sfp.scorer2013.recall+"\t"+sfp.scorer2013.F+"\n");
+				sfp.scorer2013 = new SFScore();
+			}
+			else if(year.equals("2014")){
+				sfp.scorer2014.run(nargs);
+				bw.write(sfp.typeStr+"\t"+sfp.scorer2014.precision+"\t"+sfp.scorer2014.recall+"\t"+sfp.scorer2014.F+"\n");
+				sfp.scorer2014 = new SFScore2014();
+			}
+			
+			
+			
 			//clear everything
 			sfp.extractions.clear();
 			sfp.outputs.clear();
@@ -279,7 +302,7 @@ public class SFOutputPreprocessor {
 			sfp.fillCount=0;
 			sfp.typeStr = new String("");
 			sfp.outFile = new String("");
-			sfp.scorer = new SFScore2014();
+			
 			
 		}
 		

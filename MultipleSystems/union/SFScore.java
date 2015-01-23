@@ -254,7 +254,9 @@ import java.io.*;
 import java.util.*;
 
 public class SFScore {
-
+	float recall;
+	float precision;
+	float F;
     // true to print out judgement for each line of response
      boolean trace = false;
 
@@ -443,7 +445,7 @@ public class SFScore {
 	    // manage different judgments: keep the strongest
 		if (! jment.equals(J)) {  
 		    String strongerJ = solveDisagreement(J, jment); // pick the stronger judgment, e.g., C is preferred over W
-		    System.out.println("Warning: Multiple conflicting judgments for response " + key + ": " + jment + " vs. " + J + " => we kept " + strongerJ);
+		   // System.out.println("Warning: Multiple conflicting judgments for response " + key + ": " + jment + " vs. " + J + " => we kept " + strongerJ);
 		    if(! strongerJ.equals(J)) {
 		    	// update judgment
 		    	judgement.put(key, strongerJ);
@@ -746,9 +748,7 @@ public class SFScore {
 	System.out.println ("\tNumber inexact: " + num_inexact);
 	System.out.println ("\tNumber incorrect / spurious: " + num_wrong);
 
-	float recall;
-	float precision;
-	float F;
+
 
 	recall = ((float) num_correct) / num_answers;
 	precision = ((float) num_correct) / (num_responses - num_kb_redundant);  // don't penalize for fillers already in reference KB
@@ -789,15 +789,15 @@ public class SFScore {
 		
 	}
 	
-	for(String k : mpSlotConfidence_precision.keySet() ){
-			System.out.println(k+"\t : \t"+mpSlotConfidence_precision.get(k));
-	}
-	for(String k : mpSlotConfidence_recall.keySet() ){
-		System.out.println(k+"\t : \t"+mpSlotConfidence_recall.get(k));
-	}
-	for(String k : mpSlotConfidence_f1.keySet() ){
-		System.out.println(k+"\t : \t"+mpSlotConfidence_f1.get(k));
-	}
+//	for(String k : mpSlotConfidence_precision.keySet() ){
+//			System.out.println(k+"\t : \t"+mpSlotConfidence_precision.get(k));
+//	}
+//	for(String k : mpSlotConfidence_recall.keySet() ){
+//		System.out.println(k+"\t : \t"+mpSlotConfidence_recall.get(k));
+//	}
+//	for(String k : mpSlotConfidence_f1.keySet() ){
+//		System.out.println(k+"\t : \t"+mpSlotConfidence_f1.get(k));
+//	}
 	
 		
     }
