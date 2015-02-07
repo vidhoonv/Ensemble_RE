@@ -191,6 +191,7 @@ public class postProcessor {
 		csv.readLine(); //skip header
 		int expectedNumFields=10,predictedTargetFieldIndex=8,fillIndex=4;
 		int conf1Index=6, conf2Index=7;
+		int confIndexStart=0,confIndexEnd=0;
 		
 		if(year.equals("2013")){
 			expectedNumFields=12;
@@ -200,11 +201,11 @@ public class postProcessor {
 			conf2Index=9;
 		}
 		else if(year.equals("2014")){
-			expectedNumFields=10;
-			predictedTargetFieldIndex=8;
+			expectedNumFields=18;
+			predictedTargetFieldIndex=16;
 			fillIndex=4;
-			conf1Index=6;
-			conf2Index=7;
+			confIndexStart=6;
+			confIndexEnd=15;
 		}
 		else{
 			System.out.println("ERR: Invalid year");
@@ -234,10 +235,12 @@ public class postProcessor {
 				output_string += "\t" + data [fillIndex] + "\t" + data [5] ;
 			}
 			
-			Double conf1=0.0, conf2=0.0;
-			conf1=Double.parseDouble(data[conf1Index]);
-			conf2=Double.parseDouble(data[conf2Index]);
-			Double diff=conf1-conf2;
+			Double conf1=0.0, conf2=0.0, sumConf=0.0;
+			for(int k=confIndexStart;k<=confIndexEnd;k++){
+				Double conf = Double.parseDouble(data[k]);
+				sumConf += conf;				
+			}
+			
 			
 			String key = data[0] + "~" + data[1];
 			if(singleValuedSlots.contains(data[1])){
@@ -254,26 +257,18 @@ public class postProcessor {
 						}
 					}
 					
-					Double max_conf=new Double(Math.max(conf1,conf2));
-					if(Double.compare(econf, max_conf)<0){
+					
+					if(Double.compare(econf, sumConf)<0){
 						mpConfidence.remove(oldkey);
 						mpOutput.remove(oldkey);
-						mpConfidence.put(query_id, Math.max(conf1,conf2));
+						mpConfidence.put(query_id, sumConf);
 						mpOutput.put(query_id, output_string);
 					}
 				}
 				else{
-					
-					if(diff<0){
-						if(data[fillIndex].equals("NIL")==false)
-							output_string += "\t" + conf2;
-						mpConfidence.put(query_id,conf2);
-					}
-					else{
-						if(data[fillIndex].equals("NIL")==false)
-							output_string += "\t" + conf1;
-						mpConfidence.put(query_id,conf1);
-					}
+					if(data[fillIndex].equals("NIL")==false)
+						output_string += "\t" + sumConf;
+					mpConfidence.put(query_id,sumConf);
 					mpOutput.put(query_id, output_string);
 					filledSlots.add(key);
 					if(slotfills.containsKey(key)){
@@ -313,16 +308,11 @@ public class postProcessor {
 						continue;
 					}
 				}
-				if(diff<0){
-					if(data[fillIndex].equals("NIL")==false)
-						output_string += "\t" + conf2;
-					mpConfidence.put(query_id,conf2);
-				}
-				else{
-					if(data[fillIndex].equals("NIL")==false)
-						output_string += "\t" + conf1;
-					mpConfidence.put(query_id,conf1);
-				}
+				
+				if(data[fillIndex].equals("NIL")==false)
+					output_string += "\t" + sumConf;
+				mpConfidence.put(query_id,sumConf);
+
 				mpOutput.put(query_id, output_string);
 				filledSlots.add(key);
 				if(slotfills.containsKey(key)){
