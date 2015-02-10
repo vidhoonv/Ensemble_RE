@@ -46,6 +46,14 @@ public class TopN<T extends Comparable<T>> {
   public List<T> elementList() {
     List<T> l = new ArrayList<T>(elements.size());
     for (Entry<T, Double> e : elements) {
+    	/*
+    	 * the strategy of choosing just top elements might
+    	 * not work well for aliasing slot fills 
+    	 * so we threshold based on link count
+    	 */
+      if(e.getValue()<30){
+    	  break;
+      }
       l.add(e.getKey());
     }
     return l;

@@ -2,6 +2,7 @@ package MultipleSystems.stacking;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -40,14 +41,65 @@ public class postProcessor {
 	Map<String,Boolean> slotfills = new HashMap<String,Boolean>();
 	Set<String> perSlots = new HashSet<String>();
 	Set<String> orgSlots = new HashSet<String>();
+	Set<String> specialAliasSlots = new HashSet<String>(); //slots for which strong equals should be used 
+	Set<String> citySlots = new HashSet<String>();
+	Set<String> countrySlots = new HashSet<String>();
+	Set<String> countriesSet = new HashSet<String>(); 
 	String runid = new String("");
 	AliasWrapper aw = null;
 	boolean doAlias = false;
-	public postProcessor(String aliasFlag, String wikiFilePath, String orgSuffixPath) throws IOException{
+	
+	
+	public postProcessor(String aliasFlag, String wikiFilePath, String orgSuffixPath, String countriesFile) throws IOException{
 		if(aliasFlag.equals("true")){
 			aw = new AliasWrapper(wikiFilePath,orgSuffixPath,10);
+			populateCountries(countriesFile);
 			doAlias=true;
 		}
+		
+		
+	}
+	
+	/*
+	 * a method that reads list of countries
+	 * and loads it in countriesSet for filtering 
+	 * of fills
+	 */
+	
+	void populateCountries(String inFile) throws IOException{
+		
+		BufferedReader fread = new BufferedReader(new FileReader(inFile));
+		String line;
+		while ((line = fread.readLine()) != null){
+			String[] parts = line.split("\\|");
+			countriesSet.add(parts[0]);
+			String cName = parts[1].toLowerCase();
+			if(cName.contains(",")){
+				String[] pp = cName.split(",");
+				countriesSet.add(pp[1]);
+				//System.out.println(pp[1]);
+				
+				
+				countriesSet.add(pp[0]+" "+pp[1]);
+				for(String exp : aw.getAliases(pp[0]+" "+pp[1])){
+					exp = exp.toLowerCase();
+					countriesSet.add(exp);
+				}
+				//System.out.println(pp[0]+" "+pp[1]);
+			}
+			else{
+				countriesSet.add(cName);
+				//System.out.println(cName);
+				
+				for(String exp : aw.getAliases(cName)){
+					exp = exp.toLowerCase();
+					countriesSet.add(exp);
+				}
+				
+			}			
+		}
+		fread.close();
+		System.out.println("number of entries in countries set: "+countriesSet.size());
 		
 	}
 	/*
@@ -111,6 +163,36 @@ public class postProcessor {
 		orgSlots.add("org:shareholders");
 		orgSlots.add("org:website");
 	
+		//these slots have names of person or orgs as fills
+		specialAliasSlots.add("org:top_members_employees");
+		//specialAliasSlots.add("per:title");		
+		specialAliasSlots.add("org:alternate_names");
+		specialAliasSlots.add("per:employee_or_member_of");
+		//specialAliasSlots.add("per:alternate_names");
+		specialAliasSlots.add("org:parents");
+		//specialAliasSlots.add("per:spouse");
+		//specialAliasSlots.add("per:parents");
+		specialAliasSlots.add("org:founded_by");
+		specialAliasSlots.add("org:subsidiaries");
+		//specialAliasSlots.add("per:siblings");
+		//specialAliasSlots.add("per:children");
+		//specialAliasSlots.add("per:other_family");
+		specialAliasSlots.add("org:members");
+		specialAliasSlots.add("");
+		specialAliasSlots.add("");
+		
+		//these slots have cities as fills
+		citySlots.add("per:cities_of_residence");
+		citySlots.add("per:city_of_birth");
+		citySlots.add("per:city_of_death");
+		citySlots.add("org:city_of_headquarters");	
+		
+		//these slots have countries as fills
+		countrySlots.add("per:countries_of_residence");
+		countrySlots.add("per:country_of_birth");
+		countrySlots.add("per:country_of_death");
+		countrySlots.add("org:country_of_headquarters");
+		
 		
 		String queryPrefix = new String("SF14_ENG_");
 		String delimiter = new String("~");
@@ -183,8 +265,82 @@ public class postProcessor {
 		out.close();
 		
 	}
+	
+	/*
+	 * a strict alias equal function
+	 * that considers two fills to be alias 
+	 * if even a single word in both fills match
+	 */
+	public boolean aliasEquals(String fill1, String fill2){
+		boolean result = false;
+		Set<String> fill1Parts = new HashSet<String>();
+		Set<String> fill2Parts = new HashSet<String>();
+		int commonCount=0;
+		for(String s: fill1.split(" ")){
+			fill1Parts.add(s);
+		}
+		for(String s: fill2.split(" ")){
+			fill2Parts.add(s);
+		}
+		
+		for(String s : fill1Parts){
+			if(fill2Parts.contains(s)){
+				commonCount++;
+			}				
+		}
+		
+		if(commonCount>fill1Parts.size()/2 && commonCount>fill2Parts.size()/2){
+			result=true;
+		}
+		
+		return result;
+		
+	}
+	/*
+	 * a function to decide which type of
+	 * equals must be used based on slot type
+	 */
+	public boolean myEquals(String fill1, String fill2, String slotType){
+		if(specialAliasSlots.contains(slotType) || slotType.equals("per:title")){
+			return aliasEquals(fill1,fill2);			
+		}
+		else return (fill1.equalsIgnoreCase(fill2));
+	}
+	
+	/*
+	 * a method to check for valid countries
+	 *  
+	 */
+	
+	public boolean checkForCountry(String fill){
+		if(countriesSet.contains(fill)){
+			return true;
+		}
+		else{
+			for(String country : countriesSet){
+				if(aliasEquals(country,fill)){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/*
+	 * a method to check for valid cities
+	 *  
+	 */
+	
+	public boolean checkForCityisCountry(String fill){
+		if(countriesSet.contains(fill)){
+			return true;
+		}
+		
+		return false;
+	}
 	public void processClassifierOutput(String infile, String year) throws IOException{
 		int nLines=0, nSkipped=0, nAliasFillsSkipped=0;
+		int nCityFillsSkipped=0, nCountryFillsSkipped=0;
 		BufferedReader csv = null;
 		csv = new BufferedReader(new FileReader(infile));
 		String line;
@@ -242,7 +398,30 @@ public class postProcessor {
 			}
 			
 			
-			String key = data[0] + "~" + data[1];
+			String key = data[0] + "~" + data[1];			
+			/*
+			 * do filtering for city and country fills
+			 * 
+			 */
+			
+			if(citySlots.contains(data[1])){
+				if(checkForCityisCountry(data[fillIndex].toLowerCase())){
+					//the fill is supposed to be a city but it is passing country check
+					System.out.println("Skipping cityfill : "+data[fillIndex]+" for slot "+data[1]);
+					nCityFillsSkipped++;
+					continue;
+				}
+			}
+			/*
+			if(countrySlots.contains(data[1])){
+				if(checkForCountry(data[fillIndex].toLowerCase())==false){
+					//the fill is supposed to be a country but it is failing country check
+					System.out.println("Skipping countryfill : "+data[fillIndex]+" for slot "+data[1]);
+					nCountryFillsSkipped++;
+					continue;
+				}
+			}
+			*/
 			if(singleValuedSlots.contains(data[1])){
 				//chose the highest confidence value for extraction				
 				if(filledSlots.contains(key)){
@@ -280,6 +459,8 @@ public class postProcessor {
 			}
 			else{
 				if(doAlias == true){
+					String slotType = new String(data[1]);
+					
 					//check for alias
 					String newfill = new String(data[fillIndex]);
 					List<String> existingFills = new ArrayList<String>();
@@ -293,12 +474,23 @@ public class postProcessor {
 					}
 
 					for(String oldFill : existingFills){
-						List<String> aliases = aw.getAliases(oldFill);
+						
+						List<String> aliases = null;
+						if(slotType.equals("per:title")==false)
+							aliases = aw.getAliases(oldFill);
+						else
+							aliases = new ArrayList<String>();
+						
+						aliases.add(oldFill);
 						for(String a : aliases){
-							if(newfill.equals(a)){
-								System.out.println("alias found for -"+newfill+" -from oldfill -"+oldFill);
+							if(myEquals(newfill,a,slotType)){
+								System.out.println("alias found for slottype-"+slotType+" fill- "+newfill+" -from oldfill -"+oldFill);
 								aliasFound = true;
+								break;
 							}
+						}
+						if(aliasFound==true){
+							break;
 						}
 					}
 
@@ -325,6 +517,8 @@ public class postProcessor {
 		System.out.println("Total lines: "+nLines);
 		System.out.println("Skipped lines: "+nSkipped);
 		System.out.println("Alias fills skipped: "+nAliasFillsSkipped);
+		System.out.println("City fills skipped: "+nCityFillsSkipped);
+		System.out.println("Country fills skipped: "+nCountryFillsSkipped);
 	}
 	/*
 	 * args[0]	-	input file comprising of the slot fills and classifier result 
@@ -333,6 +527,7 @@ public class postProcessor {
 	 * args[3]  -   aliasFlag
 	 * args[4]  -   wiki links path
 	 * args[5]  -   org suffixes path
+	 * args[6]  -   countries file path
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
@@ -340,7 +535,7 @@ public class postProcessor {
 		String outFile=new String(args[1]);
 		String year = new String(args[2]);
 		String aliasFlag = new String(args[3]);
-		postProcessor pp = new postProcessor(aliasFlag, args[4],args[5]);
+		postProcessor pp = new postProcessor(aliasFlag, args[4],args[5],args[6]);
 		pp.populateSingleValuedSlots();
 		pp.populateSlotFills();
 		pp.processClassifierOutput(fname,year);
